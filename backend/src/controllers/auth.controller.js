@@ -712,8 +712,8 @@ const _createAndSendResetToken = async (user) => {
   const tokenHash = await bcrypt.hash(rawToken, 10);
 
   await pool.query(
-    `INSERT INTO password_reset_tokens (user_id, email, token_hash, expires_at)
-     VALUES ($1, $2, $3, NOW() + INTERVAL '15 minutes')`,
+    `INSERT INTO password_reset_tokens (user_id, email, token_hash, expires_at, used)
+     VALUES ($1, $2, $3, NOW() + INTERVAL '15 minutes', false)`,
     [user.user_id, user.email, tokenHash]
   );
 
@@ -761,7 +761,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   const tokenResult = await pool.query(
     `SELECT token_id, token_hash FROM password_reset_tokens
-     WHERE email = $1 AND expires_at > NOW() AND used = false
+     WHERE email = $1 AND expires_at > NOW() AND (used = false OR used IS NULL)
      ORDER BY created_at DESC`,
     [email]
   );
@@ -801,6 +801,12 @@ const resetPassword = asyncHandler(async (req, res) => {
   await pool.query(
     'UPDATE password_reset_tokens SET used = true WHERE token_id = $1',
     [matchedTokenId]
+  );
+
+  // Invalidate all existing refresh tokens so user must log in fresh
+  await pool.query(
+    'DELETE FROM refresh_tokens WHERE user_id = (SELECT user_id FROM users WHERE email = $1)',
+    [email]
   );
 
   return res.status(200).json({

@@ -29,7 +29,7 @@ const generateTokens = async (user) => {
     // Store refresh token in DB (expires 7 days from now)
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await pool.query(
-        'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+        'INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (gen_random_uuid(), $1, $2, $3)',
         [user.user_id, refreshToken, expiresAt]
     );
 

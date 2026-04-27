@@ -707,8 +707,8 @@ const createCategory = asyncHandler(async (req, res) => {
   }
 
   const result = await pool.query(
-    `INSERT INTO food_categories (name, description, icon_url)
-     VALUES ($1, $2, $3)
+    `INSERT INTO food_categories (name, description, icon_url, is_active)
+     VALUES ($1, $2, $3, true)
      RETURNING *`,
     [name.trim(), description || null, icon_url || null],
   );

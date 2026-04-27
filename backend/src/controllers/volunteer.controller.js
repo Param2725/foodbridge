@@ -817,29 +817,50 @@ const updateMissionStatus = asyncHandler(async (req, res) => {
       const co2Saved = parseFloat((quantity * 2.5).toFixed(2)); // ~2.5kg CO2 per kg food
 
       // Update impact_metrics for volunteer
-      await client.query(
-        `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())
-         ON CONFLICT (user_id) DO UPDATE
-         SET total_deliveries = impact_metrics.total_deliveries + 1,
-             meals_saved = impact_metrics.meals_saved + $2,
-             co2_prevented_kg = impact_metrics.co2_prevented_kg + $3,
-             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4,
-             updated_at = NOW()`,
-        [userId, servings, co2Saved, quantity],
+      const volMetric = await client.query(
+        `SELECT metric_id FROM impact_metrics WHERE user_id = $1`, [userId]
       );
+      if (volMetric.rows.length > 0) {
+        await client.query(
+          `UPDATE impact_metrics
+           SET total_deliveries = total_deliveries + 1,
+               meals_saved = meals_saved + $2,
+               co2_prevented_kg = co2_prevented_kg + $3,
+               waste_diverted_kg = waste_diverted_kg + $4,
+               updated_at = NOW()
+           WHERE user_id = $1`,
+          [userId, servings, co2Saved, quantity],
+        );
+      } else {
+        await client.query(
+          `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
+           VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())`,
+          [userId, servings, co2Saved, quantity],
+        );
+      }
+
       // Update impact_metrics for donor
-      await client.query(
-        `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())
-         ON CONFLICT (user_id) DO UPDATE
-         SET total_deliveries = impact_metrics.total_deliveries + 1,
-             meals_saved = impact_metrics.meals_saved + $2,
-             co2_prevented_kg = impact_metrics.co2_prevented_kg + $3,
-             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4,
-             updated_at = NOW()`,
-        [mission.donor_id, servings, co2Saved, quantity],
+      const donorMetric = await client.query(
+        `SELECT metric_id FROM impact_metrics WHERE user_id = $1`, [mission.donor_id]
       );
+      if (donorMetric.rows.length > 0) {
+        await client.query(
+          `UPDATE impact_metrics
+           SET total_deliveries = total_deliveries + 1,
+               meals_saved = meals_saved + $2,
+               co2_prevented_kg = co2_prevented_kg + $3,
+               waste_diverted_kg = waste_diverted_kg + $4,
+               updated_at = NOW()
+           WHERE user_id = $1`,
+          [mission.donor_id, servings, co2Saved, quantity],
+        );
+      } else {
+        await client.query(
+          `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
+           VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())`,
+          [mission.donor_id, servings, co2Saved, quantity],
+        );
+      }
     }
 
     await client.query('COMMIT');
@@ -904,6 +925,7 @@ const updateMissionStatus = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     await client.query('ROLLBACK');
+    console.error('❌ updateMissionStatus transaction failed:', err.message, err.detail || '', err.hint || '');
     throw err;
   } finally {
     client.release();

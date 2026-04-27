@@ -41,11 +41,11 @@ export default function Login() {
                 return
             }
 
-            // fetch user from /me via context
-            const user = await login()
+            // Set user in context directly from login response (avoids /me call which can fail on mobile due to cookie restrictions)
+            const user = data.data.user
+            login(user)
             
             // Route user based on their role
-            const userRole = data.data.user.role;
             if (user.role === 'admin') {
                 navigate('/admin', { replace: true });
             } else if (user.role === 'recipient') {

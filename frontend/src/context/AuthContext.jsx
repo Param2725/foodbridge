@@ -60,14 +60,21 @@ export function AuthProvider({ children }) {
      * Stores the returned user in context so the entire app re-renders
      * with authentication-aware state.
      */
-    const login = async () => {
+    const login = async (userData) => {
+        if (userData) {
+            setUser(userData);
+            return userData;
+        }
+        // Fallback: fetch from /me if no user provided
         const res = await fetch(`${API_BASE}/me`, {
             credentials: 'include'
         });
 
+        if (!res.ok) return null;
+
         const data = await res.json();
         setUser(data.data.user);
-        return data.data.user; // fetch fresh user from backend
+        return data.data.user;
     }
 
     /**

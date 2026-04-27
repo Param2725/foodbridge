@@ -818,24 +818,26 @@ const updateMissionStatus = asyncHandler(async (req, res) => {
 
       // Update impact_metrics for volunteer
       await client.query(
-        `INSERT INTO impact_metrics (user_id, meals_saved, total_deliveries, co2_prevented_kg, waste_diverted_kg)
-         VALUES ($1, $2, 1, $3, $4)
+        `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())
          ON CONFLICT (user_id) DO UPDATE
          SET total_deliveries = impact_metrics.total_deliveries + 1,
              meals_saved = impact_metrics.meals_saved + $2,
              co2_prevented_kg = impact_metrics.co2_prevented_kg + $3,
-             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4`,
+             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4,
+             updated_at = NOW()`,
         [userId, servings, co2Saved, quantity],
       );
       // Update impact_metrics for donor
       await client.query(
-        `INSERT INTO impact_metrics (user_id, meals_saved, total_deliveries, co2_prevented_kg, waste_diverted_kg)
-         VALUES ($1, $2, 1, $3, $4)
+        `INSERT INTO impact_metrics (metric_id, user_id, meals_saved, total_deliveries, total_donations, total_claims, co2_prevented_kg, waste_diverted_kg, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, 1, 0, 0, $3, $4, NOW())
          ON CONFLICT (user_id) DO UPDATE
          SET total_deliveries = impact_metrics.total_deliveries + 1,
              meals_saved = impact_metrics.meals_saved + $2,
              co2_prevented_kg = impact_metrics.co2_prevented_kg + $3,
-             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4`,
+             waste_diverted_kg = impact_metrics.waste_diverted_kg + $4,
+             updated_at = NOW()`,
         [mission.donor_id, servings, co2Saved, quantity],
       );
     }

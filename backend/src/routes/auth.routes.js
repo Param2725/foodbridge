@@ -81,7 +81,7 @@ const resendResetValidation = [
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
 router.post('/logout', authenticateToken, logout);
-router.post('/refresh', authenticateToken, refresh);
+router.post('/refresh', refresh);
 router.get('/me', authenticateToken, me);
 
 // Password reset — public (no auth required)

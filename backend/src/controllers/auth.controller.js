@@ -632,11 +632,32 @@ const logout = asyncHandler(async (req, res) => {
  * POST /api/auth/refresh
  */
 const refresh = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
+  const sentToken = req.cookies?.refreshToken || req.headers.authorization?.split(' ')[1];
+
+  if (!sentToken) {
+    return res.status(401).json({
+      success: false,
+      data: {},
+      message: 'Refresh token is required',
+    });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(sentToken, process.env.JWT_REFRESH_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      data: {},
+      message: 'Refresh token expired or invalid. Please login again.',
+    });
+  }
+
+  const { userId } = decoded;
 
   const result = await pool.query(
-    'SELECT * FROM refresh_tokens WHERE user_id = $1 AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1',
-    [userId]
+    'SELECT * FROM refresh_tokens WHERE user_id = $1 AND token = $2 AND expires_at > NOW()',
+    [userId, sentToken]
   );
 
   if (result.rows.length === 0) {
@@ -647,19 +668,7 @@ const refresh = asyncHandler(async (req, res) => {
     });
   }
 
-  const storedToken = result.rows[0].token;
 
-  let decoded;
-  try {
-    decoded = jwt.verify(storedToken, process.env.JWT_REFRESH_SECRET);
-  } catch (err) {
-    await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
-    return res.status(401).json({
-      success: false,
-      data: {},
-      message: 'Refresh token expired. Please login again.',
-    });
-  }
 
   const accessToken = generateAccessToken({
     userId: decoded.userId,

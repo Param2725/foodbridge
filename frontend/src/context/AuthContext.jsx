@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { getAccessToken, clearTokens } from '../services/api'
 
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -28,13 +29,19 @@ export function AuthProvider({ children }) {
 
     /**
      * Check the current session by calling /api/auth/me.
-     * If the HTTP-only cookie is valid the backend returns the user object.
+     * Uses stored token via Authorization header (cross-domain mobile support).
      */
     const checkAuth = async () => {
         try {
+            const accessToken = getAccessToken()
+            const headers = accessToken
+                ? { 'Authorization': `Bearer ${accessToken}` }
+                : {}
+
             const res = await fetch(`${API_BASE}/me`, {
                 method: 'GET',
                 credentials: 'include',
+                headers,
             })
 
             if (res.ok) {
@@ -57,8 +64,7 @@ export function AuthProvider({ children }) {
 
     /**
      * Called after a successful login API response.
-     * Stores the returned user in context so the entire app re-renders
-     * with authentication-aware state.
+     * Accepts user data directly to avoid an extra /me call.
      */
     const login = async (userData) => {
         if (userData) {
@@ -66,8 +72,14 @@ export function AuthProvider({ children }) {
             return userData;
         }
         // Fallback: fetch from /me if no user provided
+        const accessToken = getAccessToken()
+        const headers = accessToken
+            ? { 'Authorization': `Bearer ${accessToken}` }
+            : {}
+
         const res = await fetch(`${API_BASE}/me`, {
-            credentials: 'include'
+            credentials: 'include',
+            headers,
         });
 
         if (!res.ok) return null;
@@ -78,11 +90,10 @@ export function AuthProvider({ children }) {
     }
 
     /**
-     * Called on sign-out. Clears application state.
-     * The actual API call to /api/auth/logout is handled by auth.service.js;
-     * this function only clears the React state.
+     * Called on sign-out. Clears application state and stored tokens.
      */
     const logoutUser = () => {
+        clearTokens()
         setUser(null)
     }
 
@@ -101,3 +112,4 @@ export function AuthProvider({ children }) {
         </AuthContext.Provider>
     )
 }
+

@@ -5,6 +5,7 @@ import {
     Chrome, Facebook, AlertCircle,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { setTokens } from '../services/api'
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false)
@@ -40,6 +41,9 @@ export default function Login() {
                 setLoading(false)
                 return
             }
+
+            // Store tokens for Authorization header (mobile cross-domain support)
+            if (data.data.accessToken) setTokens(data.data.accessToken, data.data.refreshToken)
 
             // Set user in context directly from login response (avoids /me call which can fail on mobile due to cookie restrictions)
             const user = data.data.user

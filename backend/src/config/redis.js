@@ -1,15 +1,14 @@
 // src/config/redis.js
 
-// ✅ Disable Redis completely if URL is not provided
-if (!process.env.REDIS_URL) {
-  console.log('⚠️ Redis disabled (no REDIS_URL)');
+// ✅ Disable Redis if no URL or if pointing to localhost (Vercel production)
+if (!process.env.REDIS_URL || process.env.REDIS_URL.includes('localhost')) {
+  console.log('⚠️ Redis disabled (no REDIS_URL or localhost detected)');
   module.exports = null;
   return;
 }
 
 const Redis = require('ioredis');
 
-// ✅ Keep your original robust config
 const redis = new Redis(process.env.REDIS_URL, {
   maxRetriesPerRequest: 1,
   retryStrategy(times) {

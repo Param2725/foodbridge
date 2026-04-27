@@ -668,7 +668,7 @@ const getCategories = asyncHandler(async (_req, res) => {
       COALESCE(COUNT(fl.listing_id), 0)::int AS listing_count
     FROM food_categories fc
     LEFT JOIN food_listings fl ON fc.category_id = fl.category_id
-    GROUP BY fc.category_id
+    GROUP BY fc.category_id, fc.name, fc.description, fc.icon_url, fc.is_active
     ORDER BY fc.name ASC
   `);
 
@@ -839,7 +839,7 @@ const sendBroadcast = asyncHandler(async (req, res) => {
     // Insert individual notifications for each target user
     if (targetUsers.rows.length > 0) {
       const valuesSql = targetUsers.rows
-        .map((_, i) => `($${i * 5 + 1}, 'push', $${i * 5 + 2}, $${i * 5 + 3}, false, $${i * 5 + 4})`)
+        .map((_, i) => `($${i * 4 + 1}, 'push', $${i * 4 + 2}, $${i * 4 + 3}, false, $${i * 4 + 4})`)
         .join(', ');
       const valuesParams = targetUsers.rows.flatMap((u) => [
         u.user_id,

@@ -4,7 +4,7 @@ import {
     Leaf, Lock, Eye, EyeOff, ArrowRight,
     AlertCircle, CheckCircle, ShieldCheck, Clock,
 } from 'lucide-react'
-import { fetchWithAuth } from '../services/api'
+
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams()
@@ -64,8 +64,10 @@ export default function ResetPassword() {
         setLoading(true)
 
         try {
-            const response = await fetchWithAuth('/auth/reset-password', {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const response = await fetch(`${API_URL}/api/auth/reset-password`, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: emailFromUrl,
                     token: tokenFromUrl,

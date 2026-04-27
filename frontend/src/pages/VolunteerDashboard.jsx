@@ -95,8 +95,6 @@ function MissionCard({ mission, onUpdateStatus }) {
             </div>
 
             <div className="mission-meta">
-                <div className="mission-meta-item"><Route size={14} /> {mission.distance_km != null && mission.distance_km > 0 ? `${parseFloat(mission.distance_km).toFixed(1)} km` : 'N/A'}</div>
-                <div className="mission-meta-item"><Timer size={14} /> ETA: {mission.est_duration_min != null && mission.est_duration_min > 0 ? `${Math.round(mission.est_duration_min)} min` : 'N/A'}</div>
                 <div className="mission-meta-item" style={{ color: currentStep <= 1 ? '#fbbf24' : '#34d399' }}>
                     <Flag size={14} /> {STATUS_LABELS[mission.status] || mission.status}
                 </div>
@@ -428,7 +426,7 @@ export default function VolunteerDashboard() {
                                             </div>
                                             <div className="avail-details">
                                                 <span><Package size={14} /> {m.quantity} {m.quantity_unit} - {m.listing_title}</span>
-                                                <span><Route size={14} /> {m.distance_km != null ? `${parseFloat(m.distance_km).toFixed(1)} km` : 'N/A km'}</span>
+
                                                 {m.is_urgent ? (
                                                     <span className="avail-expiry" style={{ color: 'var(--danger)' }}><Clock size={14} /> Urgent</span>
                                                 ) : (

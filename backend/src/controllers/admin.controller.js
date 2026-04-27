@@ -839,7 +839,7 @@ const sendBroadcast = asyncHandler(async (req, res) => {
     // Insert individual notifications for each target user
     if (targetUsers.rows.length > 0) {
       const valuesSql = targetUsers.rows
-        .map((_, i) => `($${i * 4 + 1}, 'push', $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+        .map((_, i) => `($${i * 5 + 1}, 'push', $${i * 5 + 2}, $${i * 5 + 3}, false, $${i * 5 + 4})`)
         .join(', ');
       const valuesParams = targetUsers.rows.flatMap((u) => [
         u.user_id,
@@ -849,7 +849,7 @@ const sendBroadcast = asyncHandler(async (req, res) => {
       ]);
 
       await client.query(
-        `INSERT INTO notifications (user_id, type, title, message, data_json)
+        `INSERT INTO notifications (user_id, type, title, message, is_read, data_json)
          VALUES ${valuesSql}`,
         valuesParams,
       );

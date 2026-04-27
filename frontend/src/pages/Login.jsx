@@ -5,7 +5,6 @@ import {
     Chrome, Facebook, AlertCircle,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { fetchWithAuth } from '../services/api'
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false)
@@ -26,8 +25,11 @@ export default function Login() {
         setError('')
 
         try {
-            const response = await fetchWithAuth('/auth/login', {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: "POST",
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             })
 

@@ -7,8 +7,8 @@ const { sendNotificationEmail: sendEmail } = require('./email.service');
 const createNotification = async ({ userId, type, title, message }) => {
   try {
     const result = await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO notifications (user_id, type, title, message, is_read)
+       VALUES ($1, $2, $3, $4, false)
        RETURNING *`,
       [userId, type, title, message],
     );
@@ -27,8 +27,8 @@ const createBulkNotifications = async (userIds, { type, title, message }) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message)
-       SELECT uid, $2, $3, $4
+      `INSERT INTO notifications (user_id, type, title, message, is_read)
+       SELECT uid, $2, $3, $4, false
        FROM unnest($1::uuid[]) AS uid
        RETURNING notification_id`,
       [userIds, type, title, message],

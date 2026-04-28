@@ -16,12 +16,39 @@ export default function Login() {
     const navigate = useNavigate()
     const location = useLocation()
     const { login } = useAuth()
+    const [errors, setErrors] = useState({})
 
     // Message passed by ProtectedRoute when user is redirected here
     const redirectMessage = location.state?.message || ''
 
+    const validate = () => {
+        const newErrors = {}
+
+        if (!email) {
+            newErrors.email = "Email is required"
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = "Invalid email format"
+        }
+
+        if (!password) {
+            newErrors.password = "Password is required"
+        } else if (password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters"
+        }
+
+        return newErrors
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        const validationErrors = validate()
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors)
+            return
+        }
+
+        setErrors({})
         setLoading(true)
         setError('')
 
@@ -48,7 +75,7 @@ export default function Login() {
             // Set user in context directly from login response (avoids /me call which can fail on mobile due to cookie restrictions)
             const user = data.data.user
             login(user)
-            
+
             // Route user based on their role
             if (user.role === 'admin') {
                 navigate('/admin', { replace: true });
@@ -102,21 +129,6 @@ export default function Login() {
                         </div>
                     )}
 
-                    <div className="oauth-buttons">
-                        <button className="oauth-btn" id="google-login-btn">
-                            <Chrome size={20} />
-                            <span>Google</span>
-                        </button>
-                        <button className="oauth-btn" id="facebook-login-btn">
-                            <Facebook size={20} />
-                            <span>Facebook</span>
-                        </button>
-                    </div>
-
-                    <div className="auth-divider">
-                        <span>or continue with email</span>
-                    </div>
-
                     <form onSubmit={handleSubmit} className="auth-form">
                         <div className="form-group">
                             <label className="form-label" htmlFor="login-email">Email address</label>
@@ -131,6 +143,7 @@ export default function Login() {
                                     onChange={e => setEmail(e.target.value)}
                                     required
                                 />
+                                {errors.email && <p className="form-error">{errors.email}</p>}
                             </div>
                         </div>
 
@@ -150,6 +163,7 @@ export default function Login() {
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                 />
+                                {errors.password && <p className="form-error">{errors.password}</p>}
                                 <button
                                     type="button"
                                     className="input-toggle"
